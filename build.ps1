@@ -48,8 +48,7 @@ function Add-Module($ModuleName) {
     if($ModuleLoaded.Contains($ModuleName)){
         return
     }
-    if($ModuleLoading.Contains($ModuleName)){]
-        Write-Error "CircularDependency"
+    if($ModuleLoading.Contains($ModuleName)){
         foreach($Name in $ModuleLoading){
             Write-Error "CircularDependencyModule<$Name>“
         }
@@ -71,5 +70,6 @@ foreach($Name in $ModuleMap.Keys){
 
 [void]$LightMake.WriteLine('$Ret = Invoke-Main $args')
 
+[void]$LightMake.WriteLine('$ModuleList[-1..-($ModuleLsit.Count)] | Foreach-Object { Remove-Module $_ }')
 $LightMake.Flush()
 $LightMake.Close()

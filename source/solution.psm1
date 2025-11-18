@@ -1,4 +1,5 @@
-##Module InfintyMake.Solution
+##Module InfinityMake.Solution
+##Import InfinityMake.Log
 function Get-SolutionFormFile([string]$SolutionFilePath) {
     $Solution = @{}
     function Set-SolutionName([string]$Name) {
@@ -86,5 +87,5 @@ function Get-SolutionFormFile([string]$SolutionFilePath) {
 
     return $Solution
 }
-
-Write-Host (Get-SolutionFormFile '.\test_solution.ps1' | ConvertTo-Json -Depth 10)
+Set-LogMode LogDebug
+Write-Log LogDebug (Get-SolutionFormFile '.\test_solution.ps1' | ConvertTo-Json -Depth 10)
