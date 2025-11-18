@@ -2,7 +2,7 @@
 [string]$SourcePath = Join-Path $WorkFolder 'Source'
 [string[]]$SourceFiles = Get-ChildItem -Path $SourcePath -Filter '*.psm1' -Recurse -File
 
-function Get-IMModule([string]$SourceFile) {
+function Get-Module([string]$SourceFile) {
     $Code = Get-Content $SourceFile
     $Module = @{
         'Name'     = $null
@@ -31,16 +31,45 @@ function Get-IMModule([string]$SourceFile) {
     return $Module
 }
 
-$IMModuleMap = @{}
+$ModuleMap = @{}
 $SourceFiles | ForEach-Object {
-    $Module = Get-IMModule $_
-    $IMModuleMap[$Module.Name] = @{
+    $Module = Get-Module $_
+    $ModuleMap[$Module.Name] = @{
         'Requires' = $Module.Requires
         'Code'     = $Module.Code
     }
 }
-$InfinityMakeFile = Join-Path $WorkFolder 'infinity_make.ps1'
-Set-Content $InfinityMakeFile (Get-Content '.\template.ps1' -Raw)
 
-$SourceJsonFile = Join-Path $WorkFolder 'make_code.json'
-$IMModuleMap | ConvertTo-Json -Depth 5 -Compress | Set-Content $SourceJsonFile
+$LightMake = [System.IO.StreamWriter]::new('infinity_make.ps1')
+[void]$LightMake.WriteLine('$ModuleList = @()')
+$ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
+$ModuleLoading = [System.Collections.Generic.HashSet[string]]::new()
+function Add-Module($ModuleName) {
+    if($ModuleLoaded.Contains($ModuleName)){
+        return
+    }
+    if($ModuleLoading.Contains($ModuleName)){]
+        Write-Error "CircularDependency"
+        foreach($Name in $ModuleLoading){
+            Write-Error "CircularDependencyModule<$Name>“
+        }
+        return
+    }
+    [void]$ModuleLoading.Add($ModuleName)
+    foreach($RequireModuleName in $ModuleMap[$ModuleName].Requires){
+        Add-Module $RequireModuleName
+    }
+    [void]$LightMake.WriteLine('$ModuleList += "{0}"' -f $ModuleName)
+    [void]$LightMake.WriteLine('New-Module -Name "{0}" -ScriptBlock {{{1}}} | Import-Module' -f @($ModuleName,$ModuleMap[$ModuleName].Code))
+    [void]$ModuleLoading.Remove($ModuleName)
+    [void]$ModuleLoaded.Add($ModuleName)
+}
+
+foreach($Name in $ModuleMap.Keys){
+    Add-Module $Name
+}
+
+[void]$LightMake.WriteLine('$Ret = Invoke-Main $args')
+
+$LightMake.Flush()
+$LightMake.Close()
