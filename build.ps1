@@ -40,7 +40,7 @@ $SourceFiles | ForEach-Object {
     }
 }
 $InfinityMakeFile = Join-Path $WorkFolder 'infinity_make.ps1'
-$SourceData = $IMModuleMap | ConvertTo-Json -Depth 5 -Compress
+Set-Content $InfinityMakeFile (Get-Content '.\template.ps1' -Raw)
 
-Set-Content $InfinityMakeFile ("{0} = ConvertFrom-Json -AsHashtable -InputObject '{1}'" -f '$IMModules', $SourceData)
-Add-Content $InfinityMakeFile (Get-Content '.\template.ps1' -Raw)
+$SourceJsonFile = Join-Path $WorkFolder 'make_code.json'
+$IMModuleMap | ConvertTo-Json -Depth 5 -Compress | Set-Content $SourceJsonFile

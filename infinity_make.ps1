@@ -1,4 +1,5 @@
-$IMModules = ConvertFrom-Json -AsHashtable -InputObject '{"InfintyMake.Solution":{"Requires":[],"Code":""},"InfintyMake.Main":{"Requires":["InfintyMake.Solution"],"Code":"\r\nfunction Invoke-Main([string[]]$ArgumentList) {\r\n    Write-Host $ArgumentList\r\n    return 0\r\n}\r\n"}}'
+$IMModules = Get-Content '.\make_code.json' -Raw | ConvertFrom-Json -AsHashtable
+
 $ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
 function Import-IMModule([string]$ModuleName) {
     if ($ModuleLoaded.Contains($ModuleName)) {

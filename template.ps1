@@ -1,3 +1,5 @@
+$IMModules = Get-Content '.\make_code.json' -Raw | ConvertFrom-Json -AsHashtable
+
 $ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
 function Import-IMModule([string]$ModuleName) {
     if ($ModuleLoaded.Contains($ModuleName)) {
