@@ -60,6 +60,9 @@ function Get-SolutionFormFile([string]$SolutionFilePath) {
         function Set-Arch([string]$Arch) {
             $Project['Arch'] = $Arch
         }
+        function Set-Plat([string]$Plat) {
+            $Project['Plat'] = $Plat
+        }
         function Add-Requires([string[]]$Requires) {
             if (-not $Project.ContainsKey('Requires')) {
                 $Project['Requires'] = @()
@@ -87,5 +90,3 @@ function Get-SolutionFormFile([string]$SolutionFilePath) {
 
     return $Solution
 }
-Set-LogMode LogDebug
-Write-Log LogDebug (Get-SolutionFormFile '.\test_solution.ps1' | ConvertTo-Json -Depth 10)

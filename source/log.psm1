@@ -1,5 +1,4 @@
 ##Module InfinityMake.Log
-
 enum LogType{
     LogErr = 0
     LogWarn = 1
