@@ -28,8 +28,22 @@ function Build-SolutionFileSystem([hashtable]$Solution,[string]$RootDir) {
 function Build-ProjectFileSystem([hashtable]$Project,[string]$RootDir) {
     $ProjectRootDir = Join-Path $RootDir $Project.Name
     New-Folder $ProjectRootDir
-    $ProjectTargetDir = Join-Path $ProjectTargetDir $Project.Plat $Project.ToolChain $Project.Arch
-    New-Folder $ProjectTargetDir
-    $ProjectTargetObjsDir = Join-Path $ProjectTargetObjsDir 'objs'
-    New-Folder $ProjectTargetObjsDir
+    $ProjectDir = Join-Path $ProjectRootDir $Project.Plat $Project.ToolChain $Project.Arch
+    New-Folder $ProjectDir
+    $ProjectObjsDir = Join-Path $ProjectDir '.objs'
+    New-Folder $ProjectObjsDir
+    $ProjectCacheDir = Join-Path $ProjectDir '.cache'
+    New-Folder $ProjectCacheDir
+    $ProjectTempDir = Join-Path $ProjectDir '.temp'
+    if(Test-Path -Path $ProjectTempDir -PathType Container){
+        Remove-Item $ProjectTempDir -Recurse
+    }
+    New-Folder $ProjectTempDir
+    return @{
+        'RootDir' = $ProjectRootDir
+        'BuildDir' = $ProjectDir
+        'ObjsDir' = $ProjectObjsDir
+        'CacheDir' = $ProjectCacheDir
+        'TempDir' = $ProjectTempDir
+    }
 }

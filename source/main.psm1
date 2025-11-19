@@ -8,7 +8,7 @@ function Invoke-Main([string[]]$ArgumentList) {
         Set-LogMode LogDebug
     }
     $Solution = Get-SolutionFormFile '.\test_solution.ps1'
-    Build-SolutionFileSystem $Solution (Get-WorkDir)
     Write-Log LogDebug ($Solution | ConvertTo-Json -Depth 10)
+    Build-Solution $Solution
     return 0
 }

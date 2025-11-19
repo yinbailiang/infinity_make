@@ -1,5 +1,5 @@
 ##Module InfinityMake.Builder
-
+##Import InfinityMake.FileSystem
 
 $Plats = @{}
 function Get-Plat([string]$Name) {
@@ -18,21 +18,33 @@ function Get-ToolChain([string]$Name) {
     return Invoke-Command $ToolChains[$Name]
 }
 $ToolChains['msvc'] = {
+    return @{
+        'Builder' = {
+            param([hashtable]$Project,[hashtable]$FileSystem)
 
+        }
+    }
 }
 $ToolChains['llvm'] = {
+    return @{
+        'Builder' = {
+            param([hashtable]$Project,[hashtable]$FileSystem)
 
+        }
+    }
 }
 
 
 
-function Build-Project([hashtable]$Project) {
-    #$ToolChain = Get-ToolChain $Project.ToolChain
-    $FileSystem = Build-ProjectFileSystem $Project
-    #return Invoke-Command $ToolChain.Builder $Project,$FileSystem
+function Build-Project([hashtable]$Project,[hashtable]$SolutionFileSystem) {
+    $ToolChain = Get-ToolChain $Project.ToolChain
+    $FileSystem = Build-ProjectFileSystem $Project $SolutionFileSystem.RootDir
+    return Invoke-Command $ToolChain.Builder -ArgumentList $Project,$FileSystem
 }
 
 function Build-Solution([hashtable]$Solution) {
+    $SolutionFileSystem = Build-SolutionFileSystem $Solution (Get-WorkDir)
+
     $ProjectBuilded = [System.Collections.Generic.HashSet[string]]::new()
     $ProjectBuilding = [System.Collections.Generic.HashSet[string]]::new()
 
@@ -51,11 +63,11 @@ function Build-Solution([hashtable]$Solution) {
             }
         }
         [void]$ProjectBuilding.Add($ProjectName)
-        Write-Log LogInfo "BuildProject<$ProjectName>"
         foreach($RequireProjectName in $ProjectNameMap[$ProjectName].Requires){
             Invoke-BuildProject $RequireProjectName
         }
-        Build-Project $ProjectNameMap[$ProjectName]
+        Write-Log LogInfo "BuildProject<$ProjectName>"
+        Build-Project $ProjectNameMap[$ProjectName] $SolutionFileSystem
         [void]$ProjectBuilding.Remove($ProjectName)
         [void]$ProjectBuilded.Add($ProjectName)
     }
