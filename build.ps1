@@ -41,7 +41,6 @@ $SourceFiles | ForEach-Object {
 }
 
 $LightMake = [System.IO.StreamWriter]::new('infinity_make.ps1')
-[void]$LightMake.WriteLine('$ModuleList = @()')
 $ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
 $ModuleLoading = [System.Collections.Generic.HashSet[string]]::new()
 function Add-Module($ModuleName) {
@@ -58,8 +57,7 @@ function Add-Module($ModuleName) {
     foreach($RequireModuleName in $ModuleMap[$ModuleName].Requires){
         Add-Module $RequireModuleName
     }
-    [void]$LightMake.WriteLine('$ModuleList += "{0}"' -f $ModuleName)
-    [void]$LightMake.WriteLine('New-Module -Name "{0}" -ScriptBlock {{{1}}} | Import-Module' -f @($ModuleName,$ModuleMap[$ModuleName].Code))
+    [void]$LightMake.Write($ModuleMap[$ModuleName].Code)
     [void]$ModuleLoading.Remove($ModuleName)
     [void]$ModuleLoaded.Add($ModuleName)
 }
@@ -70,6 +68,5 @@ foreach($Name in $ModuleMap.Keys){
 
 [void]$LightMake.WriteLine('$Ret = Invoke-Main $args')
 
-[void]$LightMake.WriteLine('$ModuleList[-1..-($ModuleLsit.Count)] | Foreach-Object { Remove-Module $_ }')
 $LightMake.Flush()
 $LightMake.Close()

@@ -13,7 +13,7 @@ function New-Folder([string]$Path) {
     }else{
         Write-Log LogDebug ("NotFindFolder<$Path>")
         New-Item -Path $Path -ItemType Directory | Out-Null
-        Write-Log LogInfo ("CreateFolder<$Path>")
+        Write-Log LogDebug ("CreateFolder<$Path>")
     }
 }
 
@@ -21,12 +21,13 @@ function Build-SolutionFileSystem([hashtable]$Solution,[string]$RootDir) {
     $SolutionRootDir = Join-Path $RootDir $Solution.Name
     New-Folder $SolutionRootDir
     return @{
+        'WorkDir' = (Get-WorkDir)
         'RootDir' = $SolutionRootDir
     }
 }
 
-function Build-ProjectFileSystem([hashtable]$Project,[string]$RootDir) {
-    $ProjectRootDir = Join-Path $RootDir $Project.Name
+function Build-ProjectFileSystem([hashtable]$Project,[hashtable]$SolutionFileSystem) {
+    $ProjectRootDir = Join-Path $SolutionFileSystem.RootDir $Project.Name
     New-Folder $ProjectRootDir
     $ProjectDir = Join-Path $ProjectRootDir $Project.Plat $Project.ToolChain $Project.Arch
     New-Folder $ProjectDir
@@ -40,6 +41,7 @@ function Build-ProjectFileSystem([hashtable]$Project,[string]$RootDir) {
     }
     New-Folder $ProjectTempDir
     return @{
+        'SolutionFileSystem' = $SolutionFileSystem
         'RootDir' = $ProjectRootDir
         'BuildDir' = $ProjectDir
         'ObjsDir' = $ProjectObjsDir
