@@ -1,5 +1,6 @@
 infinity_make.ps1
 test.ps1
 test/
-.imcache/
+.infmake/
+.infmakeres/
 .buildcache/

@@ -60,7 +60,7 @@ foreach ($Filter in $BuildConfig.ResourcePath) {
 $ResourceZipPath = Join-Path $CacheFolder 'resource.zip'
 Compress-Archive -Path $ResourceFiles -DestinationPath $ResourceZipPath -CompressionLevel Optimal -Force
 $ResourceZipHash = Get-FileHash -Path $ResourceZipPath -Algorithm SHA256
-[void]$ScriptFileStream.WriteLine('$ResourceZipHash = "{0}"' -f $ResourceZipHash.Hash)
+[void]$ScriptFileStream.WriteLine('$BuiltinResourceZipHash = "{0}"' -f $ResourceZipHash.Hash)
 
 $ResourceZipFileStream = [System.IO.FileStream]::new($ResourceZipPath, [System.IO.FileMode]::Open)
 $ResourceZipData = [byte[]]::new($ResourceZipFileStream.Length)
@@ -69,7 +69,7 @@ $ResourceZipFileStream.Close()
 
 
 $ResourceZipBase64Data = [System.Convert]::ToBase64String($ResourceZipData)
-[void]$ScriptFileStream.Write('$ResourceZipData = [System.Convert]::FromBase64String("')
+[void]$ScriptFileStream.Write('$BuiltinResourceZipContent = [System.Convert]::FromBase64String("')
 [void]$ScriptFileStream.Write($ResourceZipBase64Data)
 [void]$ScriptFileStream.WriteLine('")')
 

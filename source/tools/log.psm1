@@ -46,8 +46,3 @@ class LogClient{
         $this.Server.Value.Write($this.LogMode,$Text)
     }
 }
-
-$Server = [LogServer]::new([LogType]::LogInfo)
-$Loger = [LogClient]::new([ref]$Server,[LogType]::LogInfo)
-
-$Loger.Write(">>>?")

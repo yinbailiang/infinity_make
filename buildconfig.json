@@ -5,6 +5,7 @@
         "Version":"0.0.1b"
     },
     "SourcePath":[
+        "source/tools/*.psm1",
         "source/*.psm1"
     ],
     "ResourcePath":[
