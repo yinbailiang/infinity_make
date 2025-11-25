@@ -6,34 +6,48 @@ enum LogType{
     LogDebug = 3
 }
 
-[LogType]$LogMode = [LogType]::LogInfo
-[ref]$RefLogMode = [ref]::new($LogMode)
-function Set-LogMode([LogType]$Mode) {
-    $RefLogMode.Value = $Mode
-}
-
-$Loger = @{}
-function Write-Log([LogType]$LogType, [string]$Text) {
-    [Int32]$Index = $LogType
-    if($Index -gt $RefLogMode.Value){
-        return
+class LogServer{
+    [LogType]$LogMode
+    LogServer([LogType]$Mode){
+        $This.LogMode = $Mode
     }
-    Invoke-Command $Loger[$LogType] -ArgumentList $Text
+
+    [void]Write([LogType]$Type,[string]$Text){
+        if(([int]$Type) -gt ([int]$This.LogMode)){
+            return
+        }
+        switch ($Type) {
+            ([LogType]::LogErr) {
+                Write-Host ("[Err]$Text")
+            }
+            ([LogType]::LogWarn) {
+                Write-Host ("[Warn]$Text")
+            }
+            ([LogType]::LogInfo) {
+                Write-Host ("[Info]$Text")
+            }
+            ([LogType]::LogDebug) {
+                Write-Host ("[Debug]$Text")
+            }
+        }
+    }
 }
 
-$Loger[[LogType]::LogErr] = {
-    param([string]$Text)
-    Write-Host "[Err]$Text" -ForegroundColor Red
+class LogClient{
+    [ref]$Server
+    [LogType]$LogMode
+
+    LogClient([ref]$Server,[LogType]$Mode){
+        $this.Server = $Server
+        $this.LogMode = $Mode
+    }
+
+    [void]Write([string]$Text){
+        $this.Server.Value.Write($this.LogMode,$Text)
+    }
 }
-$Loger[[LogType]::LogWarn] = {
-    param([string]$Text)
-    Write-Host "[Warn]$Text" -ForegroundColor Yellow
-}
-$Loger[[LogType]::LogInfo] = {
-    param([string]$Text)
-    Write-Host "[Info]$Text"
-}
-$Loger[[LogType]::LogDebug] = {
-    param([string]$Text)
-    Write-Host "[Debug]$Text" -ForegroundColor Blue
-}
+
+$Server = [LogServer]::new([LogType]::LogInfo)
+$Loger = [LogClient]::new([ref]$Server,[LogType]::LogInfo)
+
+$Loger.Write(">>>?")

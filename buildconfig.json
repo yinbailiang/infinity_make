@@ -1,0 +1,13 @@
+{
+    "Name":"infinity_make",
+    "PreDefine":{
+        "DevMode":"Debug",
+        "Version":"0.0.1b"
+    },
+    "SourcePath":[
+        "source/*.psm1"
+    ],
+    "ResourcePath":[
+        "resource/*"
+    ]
+}

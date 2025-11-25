@@ -1,6 +1,13 @@
 [string]$WorkFolder = Get-Location
-[string]$SourcePath = Join-Path $WorkFolder 'Source'
-[string[]]$SourceFiles = Get-ChildItem -Path $SourcePath -Filter '*.psm1' -Recurse -File
+[string]$CacheFolder = Join-Path $WorkFolder ".buildcache"
+
+[hashtable]$BuildConfig = Get-Content (Join-Path $WorkFolder 'buildconfig.json') -Raw | ConvertFrom-Json -AsHashtable
+
+
+[string[]]$SourceFiles = @()
+foreach ($Filter in $BuildConfig.SourcePath) {
+    $SourceFiles += Get-ChildItem -Path $WorkFolder -Filter $Filter
+}
 
 function Get-Module([string]$SourceFile) {
     $Code = Get-Content $SourceFile
@@ -40,33 +47,66 @@ $SourceFiles | ForEach-Object {
     }
 }
 
-$LightMake = [System.IO.StreamWriter]::new('infinity_make.ps1')
+$ScriptFileStream = [System.IO.StreamWriter]::new($BuildConfig.Name + '.ps1')
 $ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
 $ModuleLoading = [System.Collections.Generic.HashSet[string]]::new()
+
+
+[string[]]$ResourceFiles = @()
+foreach ($Filter in $BuildConfig.ResourcePath) {
+    $ResourceFiles += Get-ChildItem -Path $WorkFolder -Filter $Filter
+}
+
+$ResourceZipPath = Join-Path $CacheFolder 'resource.zip'
+Compress-Archive -Path $ResourceFiles -DestinationPath $ResourceZipPath -CompressionLevel Optimal -Force
+$ResourceZipHash = Get-FileHash -Path $ResourceZipPath -Algorithm SHA256
+[void]$ScriptFileStream.WriteLine('$ResourceZipHash = "{0}"' -f $ResourceZipHash.Hash)
+
+$ResourceZipFileStream = [System.IO.FileStream]::new($ResourceZipPath, [System.IO.FileMode]::Open)
+$ResourceZipData = [byte[]]::new($ResourceZipFileStream.Length)
+[void]$ResourceZipFileStream.Read($ResourceZipData, 0, $ResourceZipFileStream.Length)
+$ResourceZipFileStream.Close()
+
+
+$ResourceZipBase64Data = [System.Convert]::ToBase64String($ResourceZipData)
+[void]$ScriptFileStream.Write('$ResourceZipData = [System.Convert]::FromBase64String("')
+[void]$ScriptFileStream.Write($ResourceZipBase64Data)
+[void]$ScriptFileStream.WriteLine('")')
+
+foreach ($Name in $BuildConfig.PreDefine.Keys) {
+    if ($BuildConfig.PreDefine[$Name].GetType() -eq [string]) {
+        [void]$ScriptFileStream.WriteLine('${0} = "{1}"' -f ($Name, $BuildConfig.PreDefine[$Name]))
+    }
+    else {
+        [void]$ScriptFileStream.WriteLine('${0} = {1}' -f ($Name, $BuildConfig.PreDefine[$Name]))
+    }
+}
+
 function Add-Module($ModuleName) {
-    if($ModuleLoaded.Contains($ModuleName)){
+    if ($ModuleLoaded.Contains($ModuleName)) {
         return
     }
-    if($ModuleLoading.Contains($ModuleName)){
-        foreach($Name in $ModuleLoading){
+    if ($ModuleLoading.Contains($ModuleName)) {
+        foreach ($Name in $ModuleLoading) {
             Write-Error "CircularDependencyModule<$Name>“
         }
         return
     }
     [void]$ModuleLoading.Add($ModuleName)
-    foreach($RequireModuleName in $ModuleMap[$ModuleName].Requires){
+    foreach ($RequireModuleName in $ModuleMap[$ModuleName].Requires) {
         Add-Module $RequireModuleName
     }
-    [void]$LightMake.Write($ModuleMap[$ModuleName].Code)
+    [void]$ScriptFileStream.Write($ModuleMap[$ModuleName].Code)
     [void]$ModuleLoading.Remove($ModuleName)
     [void]$ModuleLoaded.Add($ModuleName)
 }
 
-foreach($Name in $ModuleMap.Keys){
+foreach ($Name in $ModuleMap.Keys) {
     Add-Module $Name
 }
 
-[void]$LightMake.WriteLine('$Ret = Invoke-Main $args')
 
-$LightMake.Flush()
-$LightMake.Close()
+[void]$ScriptFileStream.WriteLine('$Ret = Invoke-Main $args')
+
+$ScriptFileStream.Flush()
+$ScriptFileStream.Close()
