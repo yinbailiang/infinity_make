@@ -9,6 +9,7 @@ function Expand-BuiltinResource([string]$DestinationPath) {
             return
         }
     }
+    Remove-Item (Get-ChildItem $DestinationPath)
     Set-Content -Path $ResourceHashCodePath -Value (ConvertTo-Json -InputObject @{'HashCode' = $BuiltinResourceZipHash} -Compress) -NoNewline
     $ResourceZipPath = Join-Path $DestinationPath 'reource.zip'
     Set-Content -Path $ResourceZipPath -Value $BuiltinResourceZipContent -AsByteStream
@@ -22,7 +23,7 @@ function Build-BaseFileSystem {
     if (-not (Test-Path -Path $CacheDir -PathType Container)) {
         $null = New-Item -Path $CacheDir -ItemType Directory
     }
-    $ResoureDir = Join-Path $WorkDir '.infmakeres'
+    $ResoureDir = Join-Path $CacheDir 'resource'
     if(-not (Test-Path -Path $ResoureDir -PathType Container)){
         $null = New-Item -Path $ResoureDir -ItemType Directory
     }

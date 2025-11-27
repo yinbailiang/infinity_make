@@ -2,5 +2,4 @@ infinity_make.ps1
 test.ps1
 test/
 .infmake/
-.infmakeres/
 .buildcache/

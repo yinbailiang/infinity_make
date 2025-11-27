@@ -12,6 +12,10 @@ class LogServer{
         $This.LogMode = $Mode
     }
 
+    [void]SetMode([LogType]$Mode){
+        $This.LogMode = $Mode
+    }
+
     [void]Write([LogType]$Type,[string]$Text){
         if(([int]$Type) -gt ([int]$This.LogMode)){
             return
@@ -33,6 +37,8 @@ class LogServer{
     }
 }
 
+$CommonLogServer = [LogServer]::new([LogType]::LogDebug)
+
 class LogClient{
     [ref]$Server
     [LogType]$LogMode
@@ -42,7 +48,15 @@ class LogClient{
         $this.LogMode = $Mode
     }
 
+    [void]SetMode([LogType]$Mode){
+        $This.LogMode = $Mode
+    }
+
     [void]Write([string]$Text){
         $this.Server.Value.Write($this.LogMode,$Text)
+    }
+
+    [void]Write([LogType]$Type, [string]$Text){
+        $this.Server.Value.Write($Type,$Text)
     }
 }
