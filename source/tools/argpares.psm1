@@ -1,4 +1,4 @@
-##Module InfinityMake.ArgParse
+##Module InfinityMake.Tool.ArgParse
 
 
 class ArgParse{

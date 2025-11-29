@@ -1,5 +1,4 @@
-##Module InfinityMake.Solution
-##Import InfinityMake.Log
+##Module InfinityMake.Build.Solution
 
 function Get-SolutionFormFile([string]$SolutionFilePath) {
     $Solution = @{}

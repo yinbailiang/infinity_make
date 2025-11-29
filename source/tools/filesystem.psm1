@@ -1,6 +1,4 @@
-##Module InfinityMake.FileSystem
-##Import InfinityMake.Log
-
+##Module InfinityMake.Tool.FileSystem
 function Expand-BuiltinResource([string]$DestinationPath) {
     $ResourceHashCodePath = Join-Path $DestinationPath 'builtin_resource_hash_code.json'
     if(Test-Path $ResourceHashCodePath -PathType Leaf){
@@ -9,7 +7,7 @@ function Expand-BuiltinResource([string]$DestinationPath) {
             return
         }
     }
-    Remove-Item (Get-ChildItem $DestinationPath)
+    Remove-Item (Get-ChildItem $DestinationPath) -Recurse -Force
     Set-Content -Path $ResourceHashCodePath -Value (ConvertTo-Json -InputObject @{'HashCode' = $BuiltinResourceZipHash} -Compress) -NoNewline
     $ResourceZipPath = Join-Path $DestinationPath 'reource.zip'
     Set-Content -Path $ResourceZipPath -Value $BuiltinResourceZipContent -AsByteStream
@@ -34,3 +32,5 @@ function Build-BaseFileSystem {
         'ResourceDir' = $ResoureDir
     }
 }
+
+$BaseFileSystem = Build-BaseFileSystem

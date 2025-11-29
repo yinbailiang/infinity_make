@@ -1,4 +1,4 @@
-##Module InfinityMake.Log
+##Module InfinityMake.Tool.Log
 enum LogType{
     LogErr = 0
     LogWarn = 1
@@ -37,13 +37,18 @@ class LogServer{
     }
 }
 
-$CommonLogServer = [LogServer]::new([LogType]::LogDebug)
+$DefaultLogServer = [LogServer]::new([LogType]::LogDebug)
 
 class LogClient{
     [ref]$Server
     [LogType]$LogMode
 
-    LogClient([ref]$Server,[LogType]$Mode){
+    LogClient([LogType]$Mode){
+        $this.Server = Get-Variable -Name 'DefaultLogServer'
+        $this.LogMode = $Mode
+    }
+
+    LogClient([LogType]$Mode, [ref]$Server){
         $this.Server = $Server
         $this.LogMode = $Mode
     }

@@ -48,9 +48,6 @@ $SourceFiles | ForEach-Object {
 }
 
 $ScriptFileStream = [System.IO.StreamWriter]::new($BuildConfig.Name + '.ps1')
-$ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
-$ModuleLoading = [System.Collections.Generic.HashSet[string]]::new()
-
 
 [string[]]$ResourceFiles = @()
 foreach ($Filter in $BuildConfig.ResourcePath) {
@@ -82,7 +79,14 @@ foreach ($Name in $BuildConfig.PreDefine.Keys) {
     }
 }
 
+$ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
+$ModuleLoading = [System.Collections.Generic.HashSet[string]]::new()
+
 function Add-Module($ModuleName) {
+    if (-not $ModuleMap.ContainsKey($ModuleName)){
+        Write-Error "CanNotFindModule<$ModuleName>"
+        return
+    }
     if ($ModuleLoaded.Contains($ModuleName)) {
         return
     }

@@ -1,11 +1,12 @@
 ##Module InfinityMake.Main
-##Import InfinityMake.Log
-##Import InfinityMake.Solution
-##Import InfinityMake.FileSystem
+##Import InfinityMake.Tool.Log
+##Import InfinityMake.Tool.DynamicModule
+##Import InfinityMake.XXX
 
 function Invoke-Main([string[]]$ArgumentList) {
-    $BaseFileSystem = Build-BaseFileSystem
-    $Loger = [LogClient]::new([ref]$CommonLogServer,[LogType]::LogInfo)
-    $Loger.Write((Get-SolutionFormFile ".\test_solution.ps1" | ConvertTo-Json -Depth 10))
+    $Loger = [LogClient]::new([LogType]::LogInfo)
+    $Loger.Write("?????")
+    Import-DynamicModule "language.c"
+    
     return 0
 }
