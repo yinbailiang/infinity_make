@@ -1,0 +1,3 @@
+##Module InfinityMake.Core.Project
+
+

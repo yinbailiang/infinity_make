@@ -1,4 +1,4 @@
-##Module InfinityMake.Tool.Log
+##Module InfinityMake.Tools.Log
 enum LogType{
     LogErr = 0
     LogWarn = 1

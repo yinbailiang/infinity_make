@@ -6,7 +6,7 @@
     },
     "SourcePath":[
         "source/tools/*.psm1",
-        "source/build/*.psm1",
+        "source/core/*.psm1",
         "source/*.psm1"
     ],
     "ResourcePath":[

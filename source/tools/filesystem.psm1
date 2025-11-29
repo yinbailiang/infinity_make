@@ -1,4 +1,4 @@
-##Module InfinityMake.Tool.FileSystem
+##Module InfinityMake.Tools.FileSystem
 function Expand-BuiltinResource([string]$DestinationPath) {
     $ResourceHashCodePath = Join-Path $DestinationPath 'builtin_resource_hash_code.json'
     if(Test-Path $ResourceHashCodePath -PathType Leaf){

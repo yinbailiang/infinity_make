@@ -1,10 +1,9 @@
-##Module InfinityMake.Build.Solution
+##Module InfinityMake.Core.Solution
 
-function Get-SolutionFormFile([string]$SolutionFilePath) {
+$SolutionTable = @{}
+
+function Add-SolutionFormFile([string]$Name,[scriptblock]$Define) {
     $Solution = @{}
-    function Set-SolutionName([string]$Name) {
-        $Solution['Name'] = $Name
-    }
 
     function Add-Option([string]$Name, [scriptblock]$Code) {
         $Option = @{}
@@ -86,7 +85,7 @@ function Get-SolutionFormFile([string]$SolutionFilePath) {
         $Solution['Projects'] += $Project
     }
 
-    . $SolutionFilePath
+    $Define.Invoke()
 
-    return $Solution
+    $SolutionTable[$Name] = $Solution
 }
