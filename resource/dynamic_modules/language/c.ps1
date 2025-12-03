@@ -1,16 +1,34 @@
 Add-Language "C" {
-    Set-Formats @{
+    Set-Structs @{
+        'Project' = @{
+            'Type' = [hashtable]
+            'Description' = '项目的定义'
+        }
         'Source' = @{
             'Type' = [string[]]
+            'Description' = '源代码'
         }
         'Object' = @{
             'Type' = [string[]]
+            'Description' = '对象文件'
+        }
+        'Binary' = @{
+            'Type' = [string]
+            'Description' = '可执行文件'
+        }
+        'StaticLib' = @{
+            'Type' = [string]
+            'Description' = '静态库'
+        }
+        'SharedLib' = @{
+            'Type' = [string]
+            'Description' = '动态库'
         }
     }
 
     Set-RequireTools @{
         'SourceSacner' = @{
-            'Form' = 'Project' #Predefine
+            'Form' = 'Project'
             'To' = 'Source'
         }
         'Compiler' = @{
@@ -33,41 +51,13 @@ Add-Language "C" {
 
     Set-SupportTargets @{
         'Binary' = @{
-            'BuildChain' = 'Project -> Source -> Compile -> Link'
+            'BuildChain' = 'Project -> SourceScaner -> Compiler -> Linker'
         }
         'Static' = @{
-            'BuildChain' = 'Project -> Source -> Compile -> Static'
+            'BuildChain' = 'Project -> SourceScaner -> Compiler -> StaticArchiver'
         }
         'Shared' = @{
-            'BuildChain' = 'Project -> Source -> Compile -> Shared'
+            'BuildChain' = 'Project -> SourceScaner -> Compiler -> SharedArchiver'
         }
-    }
-
-    Set-BuildProcess 'Source' {
-        param([hashtable]$ToolSet,[hashtable]$Project)
-
-    }
-    Set-BuildProcess 'Compile' {
-        param([hashtable]$ToolSet, [string[]]$SourceList)
-        $ObjectList = @()
-        foreach($Source in $SourceList){
-            $ObjectList += $ToolSet['Compiler'].Invoke($Source)
-        }
-        return $ObjectList
-    }
-    Set-BuildProcess 'Link' {
-        param([hashtable]$ToolSet, [string[]]$ObjectList)
-        $Binary = $ToolSet['Linker'].Invoke($ObjectList)
-        return $Binary
-    }
-    Set-BuildProcess 'Static' {
-        param([hashtable]$ToolSet, [string[]]$ObjectList)
-        $Binary = $ToolSet['StaticArchiver'].Invoke($ObjectList)
-        return $Binary
-    }
-    Set-BuildProcess 'Shared' {
-        param([hashtable]$ToolSet, [string[]]$ObjectList)
-        $Binary = $ToolSet['SharedArchiver'].Invoke($ObjectList)
-        return $Binary
     }
 }

@@ -1,5 +1,4 @@
 Add-ToolChain 'MSVC' {
-    Set-Kind 'Standalone'
     Set-HomePage 'https://visualstudio.microsoft.com'
     Set-Description 'Microsoft Visual C/C++ Compiler'
 
@@ -11,17 +10,11 @@ Add-ToolChain 'MSVC' {
 
     Set-OnLoad {
         param([hashtable]$Project)
+        Add-Tool 'SourceScaner' {
 
-        Add-Tool 'Compiler' @{
-            'Path' = 'cl.exe'
-            'RunEnv' = @{}
         }
-
-        Add-Tools @{
-            'Linker' = @{
-                'Path' = 'link.exe'
-                'RunEnv' = @{}
-            }
+        Add-Tool 'Compiler' {
+            
         }
     }
 }

@@ -1,4 +1,4 @@
-##Module InfinityMake.Core.ToolChains
+##Module InfinityMake.Core.ToolChain
 
 
 $ToolDefines = @{

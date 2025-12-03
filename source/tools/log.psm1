@@ -6,62 +6,78 @@ enum LogType{
     LogDebug = 3
 }
 
-class LogServer{
+class LogServer {
     [LogType]$LogMode
-    LogServer([LogType]$Mode){
+    LogServer([LogType]$Mode) {
         $This.LogMode = $Mode
     }
 
-    [void]SetMode([LogType]$Mode){
+    [void]SetMode([LogType]$Mode) {
         $This.LogMode = $Mode
     }
 
-    [void]Write([LogType]$Type,[string]$Text){
-        if(([int]$Type) -gt ([int]$This.LogMode)){
+    [void]Write([LogType]$Type, [string]$Text) {
+        if (([int]$Type) -gt ([int]$This.LogMode)) {
             return
         }
         switch ($Type) {
             ([LogType]::LogErr) {
-                Write-Host ("[Err]$Text")
+                Write-Host ("`u{001b}[38;2;255;0;0m[Err  ]$($Text)")
             }
             ([LogType]::LogWarn) {
-                Write-Host ("[Warn]$Text")
+                Write-Host ("`u{001b}[38;2;255;255;0m[Warn ]$($Text)")
             }
             ([LogType]::LogInfo) {
-                Write-Host ("[Info]$Text")
+                Write-Host ("`u{001b}[38;2;0;255;255m[Info ]$($Text)")
             }
             ([LogType]::LogDebug) {
-                Write-Host ("[Debug]$Text")
+                Write-Host ("`u{001b}[38;2;0;0;255m[Debug]$($Text)")
             }
         }
     }
 }
 
-$DefaultLogServer = [LogServer]::new([LogType]::LogDebug)
+$DefaultLogServer = if ($DevMode -eq 'Debug') {
+    [LogServer]::new([LogType]::LogDebug)
+}
+else {
+    [LogServer]::new([LogType]::LogInfo)
+}
 
-class LogClient{
-    [ref]$Server
+class LogClient {
+    [ref]$Server = $DefaultLogServer
     [LogType]$LogMode
+    [int]$IndentationCount = 0
+    [string]$IndentationStr = '    '
 
-    LogClient([LogType]$Mode){
-        $this.Server = Get-Variable -Name 'DefaultLogServer'
+    LogClient([LogType]$Mode) {
         $this.LogMode = $Mode
     }
 
-    LogClient([LogType]$Mode, [ref]$Server){
+    LogClient([LogType]$Mode, [ref]$Server) {
         $this.Server = $Server
         $this.LogMode = $Mode
     }
 
-    [void]SetMode([LogType]$Mode){
+    [void]SetMode([LogType]$Mode) {
         $This.LogMode = $Mode
     }
 
-    [void]Write([string]$Text){
-        $this.Server.Value.Write($this.LogMode,$Text)
+    [void]OpenIndentationField([scriptblock]$Field){
+        $this.IndentationCount += 1
+        foreach($Temp in $Field.Invoke()){
+            $this.Write($Temp)
+        }
+        $this.IndentationCount -= 1
     }
 
-    [void]Write([LogType]$Type, [string]$Text){
-        $this.Server.Value.Write($Type,$Text)
+    [void]Write([string]$Text) {
+        $this.Write($this.LogMode,$Text)
+    }
+
+    [void]Write([LogType]$Type, [string]$Text) {
+        foreach($Line in $Text.Split([System.Environment]::NewLine)){
+            $this.Server.Value.Write($Type, $this.IndentationStr * $this.IndentationCount + $Line)
+        }
     }
 }

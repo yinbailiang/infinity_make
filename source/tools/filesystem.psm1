@@ -1,5 +1,6 @@
 ##Module InfinityMake.Tools.FileSystem
 function Expand-BuiltinResource([string]$DestinationPath) {
+    $Loger = [LogClient]::new([LogType]::LogDebug)
     $ResourceHashCodePath = Join-Path $DestinationPath 'builtin_resource_hash_code.json'
     if(Test-Path $ResourceHashCodePath -PathType Leaf){
         $ResourceHashCode = ConvertFrom-Json -InputObject (Get-Content -Path $ResourceHashCodePath -Raw) -AsHashtable
