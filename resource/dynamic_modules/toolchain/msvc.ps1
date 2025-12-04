@@ -10,11 +10,13 @@ Add-ToolChain 'MSVC' {
 
     Set-OnLoad {
         param([hashtable]$Project)
+        
         Add-Tool 'SourceScaner' {
 
-        }
+        }.GetNewClosure()
         Add-Tool 'Compiler' {
             
-        }
+        }.GetNewClosure()
+        
     }
 }

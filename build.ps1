@@ -13,14 +13,15 @@ Write-BuildLog "CacheFolder $($CacheFolder)"
 [hashtable]$BuildConfig = Get-Content (Join-Path $WorkFolder 'buildconfig.json') -Raw | ConvertFrom-Json -AsHashtable
 Write-BuildLog "BuildConfig $([System.Environment]::NewLine)$($BuildConfig | ConvertTo-Json -Depth 5)"
 
-[string[]]$SourceFiles = @()
-foreach ($Filter in $BuildConfig.SourcePath) {
-    $SourceFiles += Get-ChildItem -Path $WorkFolder -Filter $Filter
+function Find-Files ([string[]]$Filters) {
+    $Files = @()
+    foreach ($Filter in $Filters) {
+        $Files += Get-ChildItem -Path $WorkFolder -Filter $Filter
+    }
+    return $Files
 }
-Write-BuildLog "SourceFiles $([System.Environment]::NewLine)$($SourceFiles | ConvertTo-Json)"
-
-function Get-Module([string]$SourceFile) {
-    Write-BuildLog "Get-Module $($SourceFile)"
+function Read-Module([string]$SourceFile) {
+    Write-BuildLog "Read-Module $($SourceFile)"
     $Code = Get-Content $SourceFile
     $Module = @{
         'Name'     = $null
@@ -52,83 +53,118 @@ function Get-Module([string]$SourceFile) {
     }
     return $Module
 }
-
-$ModuleMap = @{}
-$SourceFiles | ForEach-Object {
-    $Module = Get-Module $_
-    $ModuleMap[$Module.Name] = @{
-        'Requires' = $Module.Requires
-        'Code'     = $Module.Code
+function Build-ModuleMap([string[]]$ModuleFiles) {
+    $ModuleMap = @{}
+    foreach ($File in $ModuleFiles) {
+        $Module = Read-Module $File
+        $ModuleMap[$Module.Name] = @{
+            'Requires' = $Module.Requires
+            'Code'     = $Module.Code
+        }
     }
+    return $ModuleMap
 }
+function Build-Module([string[]]$ModuleNameList, [hashtable]$ModuleMap) {
+    $ModuleCode = [System.Collections.ArrayList]::new();
+    $ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
+    $ModuleLoading = [System.Collections.Generic.HashSet[string]]::new()
+    function Build-Module-Impl($ModuleName) {
+        if (-not $ModuleMap.ContainsKey($ModuleName)) {
+            Write-Error "CanNotFindModule $ModuleName"
+            return
+        }
+        if ($ModuleLoaded.Contains($ModuleName)) {
+            return
+        }
+        if ($ModuleLoading.Contains($ModuleName)) {
+            foreach ($Name in $ModuleLoading) {
+                Write-Error "CircularDependencyModule $Name“
+            }
+            return
+        }
+        [void]$ModuleLoading.Add($ModuleName)
+        foreach ($RequireModuleName in $ModuleMap[$ModuleName].Requires) {
+            Build-Module-Impl $RequireModuleName
+        }
+        Write-BuildLog "Build-Module-Impl $($ModuleName)"
+        [void]$ModuleCode.Add($ModuleMap[$ModuleName].Code)
+        [void]$ModuleLoading.Remove($ModuleName)
+        [void]$ModuleLoaded.Add($ModuleName)
+    }
+
+    foreach ($Name in $ModuleNameList) {
+        Build-Module-Impl $Name
+    }
+    return $ModuleCode -join [System.Environment]::NewLine
+}
+function Build-AllModule([hashtable]$ModuleMap) {
+    $ModuleNameList = $ModuleMap.Keys | ForEach-Object { $_ }
+    return Build-Module $ModuleNameList $ModuleMap
+}
+
+function Invoke-Test([string]$TestFile,[hashtable]$ModuleMap) {
+    $TestModule = Read-Module $TestFile
+    Write-BuildLog "TestName $($TestModule.Name)"
+    $TestCode = '$InTest = $true'
+    $TestCode += Build-Module $TestModule.Requires $ModuleMap
+    $TestCode += $TestModule.Code
+    {
+        Invoke-Expression $TestCode
+    }.Invoke()
+}
+
+[string[]]$SourceFiles = Find-Files $BuildConfig.SourcePath
+Write-BuildLog "SourceFiles $([System.Environment]::NewLine)$($SourceFiles | ConvertTo-Json)"
+[hashtable]$ModuleMap = Build-ModuleMap $SourceFiles
+
+[string[]]$TestFiles = Find-Files $BuildConfig.TestPath
+Write-BuildLog "TestFiles $([System.Environment]::NewLine)$($TestFiles | ConvertTo-Json)"
+Write-BuildLog "RunTest-----------------------------------------------------------------"
+$TestFiles | ForEach-Object {
+    $Test = Invoke-Test $_ $ModuleMap
+}
+Write-BuildLog "TestFinish--------------------------------------------------------------"
+
+function Compress-ResourceFiles([string[]]$ResourceFiles) {
+    $ResourceZipPath = Join-Path $CacheFolder 'resource.zip'
+    Compress-Archive -Path $ResourceFiles -DestinationPath $ResourceZipPath -CompressionLevel Optimal -Force
+    $ResourceZipHash = Get-FileHash -Path $ResourceZipPath -Algorithm SHA256
+    Write-BuildLog "ResourceZipHash $($ResourceZipHash.Algorithm) $($ResourceZipHash.Hash)"
+
+    $ResourceZipFileStream = [System.IO.FileStream]::new($ResourceZipPath, [System.IO.FileMode]::Open)
+    $ResourceZipData = [byte[]]::new($ResourceZipFileStream.Length)
+    [void]$ResourceZipFileStream.Read($ResourceZipData, 0, $ResourceZipFileStream.Length)
+    $ResourceZipFileStream.Close()
+
+    $ResourceZipBase64Data = [System.Convert]::ToBase64String($ResourceZipData)
+    return ('$BuiltinResourceZipHash = "{0}"' -f $ResourceZipHash.Hash) + [System.Environment]::NewLine + '$BuiltinResourceZipContent = [System.Convert]::FromBase64String("' + $ResourceZipBase64Data + '")'
+}
+
+function Build-PreDefines([hashtable]$PreDefines) {
+    $Code = [System.Collections.ArrayList]::new()
+    foreach ($Name in $PreDefines.Keys) {
+        if ($PreDefines[$Name].GetType() -eq [string]) {
+            $Code += ('${0} = "{1}"' -f ($Name, $PreDefines[$Name]))
+        }
+        else {
+            $Code += ('${0} = {1}' -f ($Name, $PreDefines[$Name]))
+        }
+    }
+    return $Code -join [System.Environment]::NewLine
+}
+
 
 $ScriptFileStream = [System.IO.StreamWriter]::new($BuildConfig.Name + '.ps1')
 
-[string[]]$ResourceFiles = @()
-foreach ($Filter in $BuildConfig.ResourcePath) {
-    $ResourceFiles += Get-ChildItem -Path $WorkFolder -Filter $Filter
-}
+[string[]]$ResourceFiles = Find-Files $BuildConfig.ResourcePath
 Write-BuildLog "ResourceFiles $([System.Environment]::NewLine)$($ResourceFiles | ConvertTo-Json)"
+$ScriptFileStream.WriteLine((Compress-ResourceFiles $ResourceFiles))
 
-$ResourceZipPath = Join-Path $CacheFolder 'resource.zip'
-Compress-Archive -Path $ResourceFiles -DestinationPath $ResourceZipPath -CompressionLevel Optimal -Force
-$ResourceZipHash = Get-FileHash -Path $ResourceZipPath -Algorithm SHA256
-[void]$ScriptFileStream.WriteLine('$BuiltinResourceZipHash = "{0}"' -f $ResourceZipHash.Hash)
-Write-BuildLog "ResourceZipHash $($ResourceZipHash.Algorithm) $($ResourceZipHash.Hash)"
+$PreDefineCode = (Build-PreDefines $BuildConfig.PreDefine)
+Write-BuildLog "PreDefineCode $([System.Environment]::NewLine)$($PreDefineCode)"
+$ScriptFileStream.WriteLine($PreDefineCode)
 
-$ResourceZipFileStream = [System.IO.FileStream]::new($ResourceZipPath, [System.IO.FileMode]::Open)
-$ResourceZipData = [byte[]]::new($ResourceZipFileStream.Length)
-[void]$ResourceZipFileStream.Read($ResourceZipData, 0, $ResourceZipFileStream.Length)
-$ResourceZipFileStream.Close()
-
-
-$ResourceZipBase64Data = [System.Convert]::ToBase64String($ResourceZipData)
-[void]$ScriptFileStream.Write('$BuiltinResourceZipContent = [System.Convert]::FromBase64String("')
-[void]$ScriptFileStream.Write($ResourceZipBase64Data)
-[void]$ScriptFileStream.WriteLine('")')
-
-
-Write-BuildLog "PreDefines$([System.Environment]::NewLine)$($BuildConfig.PreDefine | ConvertTo-Json -Depth 5)"
-foreach ($Name in $BuildConfig.PreDefine.Keys) {
-    if ($BuildConfig.PreDefine[$Name].GetType() -eq [string]) {
-        [void]$ScriptFileStream.WriteLine('${0} = "{1}"' -f ($Name, $BuildConfig.PreDefine[$Name]))
-    }
-    else {
-        [void]$ScriptFileStream.WriteLine('${0} = {1}' -f ($Name, $BuildConfig.PreDefine[$Name]))
-    }
-}
-
-$ModuleLoaded = [System.Collections.Generic.HashSet[string]]::new()
-$ModuleLoading = [System.Collections.Generic.HashSet[string]]::new()
-
-function Add-Module($ModuleName) {
-    if (-not $ModuleMap.ContainsKey($ModuleName)){
-        Write-Error "CanNotFindModule $ModuleName"
-        return
-    }
-    if ($ModuleLoaded.Contains($ModuleName)) {
-        return
-    }
-    if ($ModuleLoading.Contains($ModuleName)) {
-        foreach ($Name in $ModuleLoading) {
-            Write-Error "CircularDependencyModule $Name“
-        }
-        return
-    }
-    [void]$ModuleLoading.Add($ModuleName)
-    foreach ($RequireModuleName in $ModuleMap[$ModuleName].Requires) {
-        Add-Module $RequireModuleName
-    }
-    Write-BuildLog "Add-Module $($ModuleName)"
-    [void]$ScriptFileStream.Write($ModuleMap[$ModuleName].Code)
-    [void]$ModuleLoading.Remove($ModuleName)
-    [void]$ModuleLoaded.Add($ModuleName)
-}
-
-foreach ($Name in $ModuleMap.Keys) {
-    Add-Module $Name
-}
-
+[void]$ScriptFileStream.WriteLine((Build-AllModule $ModuleMap))
 
 [void]$ScriptFileStream.WriteLine('$Ret = Invoke-Main $args')
 

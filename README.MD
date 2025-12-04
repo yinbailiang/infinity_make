@@ -7,7 +7,7 @@
 ###### 注：目前处于极早期阶段，尚未完成大部分功能！
 
 #### 使用方法
-##### 0.推荐于pwsh环境下进行
+##### 于pwsh环境下进行
 ##### 1.clone本项目
 ```shell
 git clone https://github.com/yinbailiang/infinity_make.git

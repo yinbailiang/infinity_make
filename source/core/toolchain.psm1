@@ -1,18 +1,6 @@
 ##Module InfinityMake.Core.ToolChain
 
-
-$ToolDefines = @{
-    'Compiler' = @{
-        
-    }
-    'Linker' = @{
-
-    }
-    
-}
-
-
-$ToolChainList = @{}
+$ToolChainTable = @{}
 
 function Add-ToolChain {
     

@@ -11,5 +11,8 @@
     ],
     "ResourcePath":[
         "resource/*"
+    ],
+    "TestPath":[
+        "test/tools/*.psm1"
     ]
 }

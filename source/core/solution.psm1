@@ -9,11 +9,7 @@ function Add-Solution([string]$Name, [scriptblock]$Define) {
     function Add-Project([string]$ProjectName, [scriptblock]$ProjectDefine) {
         $Project = @{}
 
-        $ProjectAPIDefine = @{
-            'Plat'      = @{
-                'Type' = 'Set'
-                'Data' = [string]
-            }
+        $ProjectBasicAPI = @{
             'Language'  = @{
                 'Type' = 'Set'
                 'Data' = [string]
@@ -40,7 +36,7 @@ function Add-Solution([string]$Name, [scriptblock]$Define) {
             }
         }
 
-        Invoke-Expression (Build-DataAPI 'Project' $ProjectAPIDefine)
+        Invoke-Expression (Build-DataAPI 'Project' $ProjectBasicAPI)
 
         $ProjectDefine.Invoke()
         
