@@ -10,6 +10,10 @@ function Write-BuildWorn([string]$Text) {
 Write-BuildLog "WorkFolder $($WorkFolder)"
 Write-BuildLog "CacheFolder $($CacheFolder)"
 
+if(-not (Test-Path $CacheFolder -PathType Container)){
+    $null = New-Item $CacheFolder -ItemType Directory
+}
+
 [hashtable]$BuildConfig = Get-Content (Join-Path $WorkFolder 'buildconfig.json') -Raw | ConvertFrom-Json -AsHashtable
 Write-BuildLog "BuildConfig $([System.Environment]::NewLine)$($BuildConfig | ConvertTo-Json -Depth 5)"
 
