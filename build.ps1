@@ -105,7 +105,7 @@ function Build-AllModule([hashtable]$ModuleMap) {
 function Invoke-Test([string]$TestFile,[hashtable]$ModuleMap) {
     $TestModule = Read-Module $TestFile
     Write-BuildLog "TestName $($TestModule.Name)"
-    $TestCode = '$InTest = $true'
+    $TestCode = '$InTest = $true' + [System.Environment]::NewLine
     $TestCode += Build-Module $TestModule.Requires $ModuleMap
     $TestCode += $TestModule.Code
     {
