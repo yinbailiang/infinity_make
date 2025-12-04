@@ -10,7 +10,7 @@ $LanguageAPI = @{
         'Type' = 'Set'
         'Data' = [hashtable]
     }
-    'SupportTargets' = @{
+    'ProjectKinds' = @{
         'Type' = 'Set'
         'Data' = [hashtable]
     }
@@ -19,13 +19,15 @@ $LanguageAPI = @{
 $LanguageTable = @{}
 function Add-Language([string]$Name, [scriptblock]$Define) {
     $Language = @{}
-    Invoke-Expression (Build-DataAPI 'Language' $LanguageAPI)
+    Invoke-Expression (Build-API 'Language' $LanguageAPI)
 
     $Define.Invoke()
     $LanguageTable[$Name] = $Language
 }
 
 Import-DynamicModule 'language.c'
+Import-DynamicModule 'language.cpp'
 
-$LanguageTbaleLoger = [LogClient]::new([LogType]::LogDebug)
-$LanguageTbaleLoger.Write(($LanguageTable | ConvertTo-Json -Depth 3))
+[LogClient]::new([LogType]::LogDebug).OpenIndentationField{
+    $LanguageTable | ConvertTo-Json -Depth 3
+}

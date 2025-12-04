@@ -2,8 +2,16 @@
 ##Import InfinityMake.Tools.FileSystem
 ##Import InfinityMake.Tools.Log
 
-function Get-DynamicModule{
+$DynamicModuleLoger = [LogClient]::new([LogType]::LogDebug)
+$DynamicModuleLoger.Write('DynamicModule')
+
+
+function Get-DynamicModule {
     return Get-ChildItem -Path (Join-Path $BaseFileSystem.ResourceDir 'dynamic_modules') -Filter "*.ps1" -Recurse
+}
+
+$DynamicModuleLoger.OpenIndentationField{
+    Get-DynamicModule
 }
 
 function Import-DynamicModule([string]$ModuleName) {
@@ -15,6 +23,7 @@ function Import-DynamicModule([string]$ModuleName) {
     }
     . $ModulePath
 }
+
 
 function Import-CSharpDynamicModule([string]$ModuleName) {
 }

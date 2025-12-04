@@ -16,7 +16,7 @@ function Add-{0}([{1}]${0}) {{
 }}
 '@# 0 = Name, 1 = Type, 2 = DataTable
 
-function Build-DataAPI([string]$DataTableName,[hashtable]$APIDefine) {
+function Build-API([string]$DataTableName,[hashtable]$APIDefine) {
     $Code = ''
     foreach($Pair in $APIDefine.GetEnumerator()){
         switch($Pair.Value['Type']){

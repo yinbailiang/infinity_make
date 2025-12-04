@@ -49,7 +49,7 @@ Add-Language "C" {
         }
     }
 
-    Set-SupportTargets @{
+    Set-ProjectKinds @{
         'Binary' = @{
             'BuildChain' = 'Project -> SourceScaner -> Compiler -> Linker'
         }
