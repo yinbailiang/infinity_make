@@ -1,12 +1,9 @@
 using System;
 
-namespace InfinityMake
+public static class Hello
 {
-    public static class Hello
+    public static void Say(string text)
     {
-        public static void Say(string text)
-        {
-            Console.Write(text);
-        }
+        Console.Write(text);
     }
 }
