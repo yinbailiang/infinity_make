@@ -29,11 +29,11 @@ class LogServer {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $levelName = switch ($Type) {
             ([LogType]::LogErr) { "ERROR" }
-            ([LogType]::LogWarn) { "WARN " }
-            ([LogType]::LogInfo) { "INFO " }
+            ([LogType]::LogWarn) { "WARN-" }
+            ([LogType]::LogInfo) { "INFO-" }
             ([LogType]::LogDebug) { "DEBUG" }
         }
-        return "[$timestamp] [$($this.AppName)] [$levelName] $Text"
+        return "[$timestamp][$($this.AppName)][$levelName]$Text"
     }
     
     [void]Write([LogType]$Type, [string]$Text) {

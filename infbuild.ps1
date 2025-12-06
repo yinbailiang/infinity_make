@@ -560,7 +560,7 @@ function Get-ResourceEmbedCode {
         $ZipBytes = [System.IO.File]::ReadAllBytes($ZipFilePath)
         $ZipHash = Get-FileHash -InputStream ([System.IO.MemoryStream]::new($ZipBytes)) -Algorithm SHA256
         $Base64Data = [System.Convert]::ToBase64String($ZipBytes)
-        
+
         $ResourceCode = @"
 `$BuiltinResourceZipHash = "$($ZipHash.Hash)"
 `$BuiltinResourceZipContent = [System.Convert]::FromBase64String("$Base64Data")
@@ -661,7 +661,7 @@ try {
     
     # 4. 构建预定义变量
     $PreDefinedsCode = $null
-    if($BuildConfig.Version){
+    if ($BuildConfig.Version) {
         $BuildConfig.PreDefineds['Version'] = $BuildConfig.Version
     }
     if ($BuildConfig.PreDefineds -and $BuildConfig.PreDefineds.Count -gt 0) {
@@ -713,7 +713,7 @@ try {
             if ($ResourceCode) {
                 $StreamWriter.WriteLine("BuiltinResource: true")
             }
-            if ($BuildConfig.Version){
+            if ($BuildConfig.Version) {
                 $StreamWriter.WriteLine("Version: $($BuildConfig.Version)")
             }
             $StreamWriter.WriteLine("#>")
@@ -739,15 +739,14 @@ try {
             $StreamWriter.WriteLine()
             
             $StreamWriter.WriteLine("#region main")
-            $StreamWriter.WriteLine('$ExitCode = 0')
             $StreamWriter.WriteLine('try {')
-            $StreamWriter.WriteLine('    $ExitCode = Invoke-Main -ArgumentList $args')
+            $StreamWriter.WriteLine('    Invoke-Main -ArgumentList $args')
             $StreamWriter.WriteLine('}')
             $StreamWriter.WriteLine('catch {')
             $StreamWriter.WriteLine('    Write-Error "$($_.Exception.Message)"')
-            $StreamWriter.WriteLine('    $ExitCode = 1')
+            $StreamWriter.WriteLine('    throw')
             $StreamWriter.WriteLine('}')
-            $StreamWriter.WriteLine('exit $ExitCode')
+            $StreamWriter.WriteLine('exit 0')
             $StreamWriter.Write("#endregion")
             
             Write-BuildLog -Message "输出文件写入完成: $OutputPath"

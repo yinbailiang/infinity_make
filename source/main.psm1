@@ -3,5 +3,6 @@
 ##Import InfinityMake.Core
 
 function Invoke-Main([string[]]$ArgumentList) {
+    throw '????'
     return 0
 }

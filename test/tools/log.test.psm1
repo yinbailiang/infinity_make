@@ -164,7 +164,6 @@ function Test-Performance {
 
 function Run-AllLogTests {
     Write-Host "开始运行日志模块测试..." -ForegroundColor Green
-    Write-Host "=" * 60 -ForegroundColor DarkGray
     
     try {
         Test-LogLevels
@@ -187,4 +186,4 @@ function Run-AllLogTests {
     }
 }
 
-Run-AllLogTests
+#Run-AllLogTests
