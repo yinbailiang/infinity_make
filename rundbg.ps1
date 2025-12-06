@@ -1,4 +1,4 @@
-. .\build.ps1
+. .\infbuild.ps1
 try {
     . .\infinity_make.ps1
 }
