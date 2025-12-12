@@ -1,5 +1,5 @@
 infinity_make.ps1
-infinity_make.infpdb
+infinity_make.debug.json
 infinity_solution.ps1
 testcode/
 .infmake/

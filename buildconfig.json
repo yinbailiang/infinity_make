@@ -1,16 +1,26 @@
 {
-    "Name":"infinity_make",
-    "Version":"0.1.0",
-    "PreDefineds":{
+    "Name": "infinity_make",
+    "Version": "0.1.0",
+    "Mode" : {
         "DevMode":"Debug"
     },
-    "SourcePath":[
-        "source/tools/*.psm1",
-        "source/core/*.psm1",
-        "source/*.psm1"
-    ],
-    "ResourcePath":"resource",
-    "TestPath":[
-        "test/tools/*.psm1"
-    ]
+    "PreDefineds": {
+        
+    },
+    "Source": {
+        "Files": [
+            "source/tools/*.psm1",
+            "source/core/*.psm1",
+            "source/*.psm1"
+        ]
+    },
+    "Resource": {
+        "Type":"Builtin",
+        "RootDir": "resource"
+    },
+    "Test": {
+        "Files": [
+            "test/tools/*.psm1"
+        ]
+    }
 }
