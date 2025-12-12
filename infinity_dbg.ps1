@@ -1,30 +1,51 @@
 # 根据参数执行脚本并利用调试信息映射错误信息
 param (
-    [Parameter(Mandatory=$true)]
-    [string]$ScriptPath,
-    [Parameter(Mandatory=$false)]
-    [string]$DebugInfoPath,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $true)]
+    [string]$ConfigPath,
+    [Parameter()]
+    [System.Object[]]$ArgumentList = @(),
+    [Parameter()]
     [switch]$ReBuild
 )
-if($ReBuild){
+
+if (-not (Test-Path -Path $ConfigPath -PathType Leaf)) {
+    Write-Host "[InfinityDbg] 未找到配置文件: $ConfigPath" -ForegroundColor Red
+    throw "未找到配置文件: $ConfigPath"
+}
+$Config = Get-Content -Path $ConfigPath | ConvertFrom-Json
+
+if ($ReBuild) {
     Write-Host "[InfinityDbg] 重新构建"
-    & ./infinity_build.ps1 -ConfigPath ".\buildconfig.json"
+    & ./infinity_build.ps1 -ConfigPath $ConfigPath
     Write-Host "[InfinityDbg] 重新构建完成"
 }
 
+$ProgramName = if ($Config.Name) {
+    $Config.Name
+}
+else {
+    "infinity_program"
+}
+
+$ProgramPath = Join-Path $PWD "$($ProgramName).ps1"
+$ProgramDebugInfoPath = Join-Path $PWD "$($ProgramName).debug.json"
+
+if(-not (Test-Path -Path $ProgramPath -PathType Leaf)){
+    Write-Host "[InfinityDbg] 未找到程序: $ProgramPath" -ForegroundColor Red
+    throw "[InfinityDbg] 未找到程序: $ProgramPath"
+}
+
+$DebugInfo = if(Test-Path -Path $ProgramDebugInfoPath -PathType Leaf){
+    Get-Content -Path $ProgramDebugInfoPath | ConvertFrom-Json
+}
+else{
+    Write-Host "[InfinityDbg] 未找到程序调试信息，将无法获得行号映射"
+    $null
+}
+
 try {
-    $DebugInfo = @{}
-    if(-not $DebugInfoPath){
-        $ScriptInfo = Get-Item -Path $ScriptPath
-        $DebugInfoPath = Join-Path $ScriptInfo.Directory ($ScriptInfo.BaseName+'.debug.json')
-    }
-    if (Test-Path -Path $DebugInfoPath) {
-        Write-Host "[InfinityDbg] 读取调试信息: $DebugInfoPath"
-        $DebugInfo = Get-Content -Path $DebugInfoPath | ConvertFrom-Json
-    }
     Write-Host "[InfinityDbg] 开始执行"
-    & $ScriptPath
+    & $ProgramPath $ArgumentList
 }
 catch {
     $ErrorMessage = $_.Exception.Message
@@ -38,7 +59,7 @@ catch {
             $FunctionName = $Matches[1]
             $FilePath = $Matches[2]
             $LineNum = [int]$Matches[3]
-            if($FilePath -eq (Get-Item -Path $ScriptPath).FullName) {
+            if ($FilePath -eq $ProgramPath) {
                 $Mapping = $DebugInfo | Where-Object { $_.OutputLine -eq $LineNum }
                 if ($Mapping) {
                     $SourceFile = $Mapping.SourceFile
@@ -50,4 +71,4 @@ catch {
         }
     }
 }
- Write-Host "[InfinityDbg] 执行完毕"
+Write-Host "[InfinityDbg] 执行完毕"

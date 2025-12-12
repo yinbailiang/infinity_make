@@ -53,7 +53,7 @@ if (-not (Test-Path -Path $ConfigPath)) {
 try {
     $BuildConfig = Get-Content -Path $ConfigPath -Raw -ErrorAction Stop | 
     ConvertFrom-Json -AsHashtable -ErrorAction Stop
-    Write-BuildLog -Message "构建配置: $([System.Environment]::NewLine)$($BuildConfig | ConvertTo-Json -Depth 5)"
+    #Write-BuildLog -Message "构建配置: $([System.Environment]::NewLine)$($BuildConfig | ConvertTo-Json -Depth 5)"
 }
 catch {
     Write-BuildError -Message "加载构建配置失败: $($_.Exception.Message)"
