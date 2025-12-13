@@ -1,6 +1,6 @@
 infinity_make.ps1
 infinity_make.debug.json
 infinity_solution.ps1
-testcode/
+infinity_build/
 .infmake/
 .buildcache/
