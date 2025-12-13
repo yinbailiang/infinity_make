@@ -1,11 +1,12 @@
 {
     "Name": "infinity_make",
     "Version": "0.1.0",
-    "Mode" : {
-        "DevMode":"Debug"
+    "Mode": {
+        "DevMode": "Debug"
     },
     "PreDefineds": {
-        
+        "Version": "0.1.0",
+        "DevMode": "Debug"
     },
     "Source": {
         "Files": [
@@ -15,7 +16,7 @@
         ]
     },
     "Resource": {
-        "Type":"Builtin",
+        "Type": "Builtin",
         "RootDir": "resource"
     },
     "Test": {
