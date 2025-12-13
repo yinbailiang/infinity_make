@@ -12,10 +12,14 @@
 ```shell
 git clone https://github.com/yinbailiang/infinity_make.git
 ```
-##### 2.构建本项目
+##### 2.clone项目构建器
 ```shell
 Set-Location infinity_make
-./build.ps1
+git clone https://github.com/yinbailiang/infinity_build.git
+```
+##### 3.构建本项目
+```shell
+./infinity_build/infinity_build.ps1 -ConfigPath ./buildconfig.json
 ```
 构建结果为生成于当前目录下的infinity_make.ps1
 ##### 3.使用本项目
